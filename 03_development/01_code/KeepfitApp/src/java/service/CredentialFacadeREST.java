@@ -126,5 +126,13 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
     q.setParameter("userId", userId);
     return q.getResultList();
     }
-    
+    /*@GET
+    @Path("findByUserId/{userId}")
+    @Produces({"application/json"})
+    public String authentication(@PathParam("userName") String userName, @PathParam("password") String password) {
+        if(userName == null || "".equals(userName));
+        TypedQuery<Credential> q = em.createQuery("SELECT s FROM Credential s WHERE s.userId.userId = :userId", Credential.class);
+        q.setParameter("userId", userId);
+        return q.getResultList();
+    }*/
 }
