@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.rf.util.ApiRequestCall;
 import com.rf.util.StringUtil;
 import com.rf.util.UrlConnectionUtils;
 
@@ -26,6 +27,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public class MainActivity extends AppCompatActivity {
     private final String SERVICE = "url.keepfit.service";
@@ -66,7 +70,31 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "please write down your login name.", Toast.LENGTH_LONG).show();
             return;
         }
-        new Thread(){
+        List<String> list = new ArrayList<>();
+        list.add("1");
+        ApiRequestCall call = new ApiRequestCall(SERVICE, LOGINAPI, list, null, "utf-8");
+        FutureTask<Map<String, String>> futureTask = new FutureTask(call);
+        new Thread(futureTask).start();
+        try {
+            Map<String, String> retMap = futureTask.get();
+            String retJson = retMap.get("retMsg");
+            if("0".equals(retMap.get("retCode"))) //Toast.makeText(getApplicationContext(), "An error occurred when asking for service.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), retJson, Toast.LENGTH_LONG).show();
+            else {
+                JSONArray jsonArray = new JSONArray(retJson);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    String name = obj.getString("name");
+                    System.out.println(name);
+                    Toast.makeText(getApplicationContext(), name, Toast.LENGTH_LONG).show();
+                }
+                //Toast.makeText(getApplicationContext(), "please write down your login name.", Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            //Toast.makeText(getApplicationContext(), "please write down your login name.", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+        /*new Thread(){
             public void run(){
                 List<String> list = new ArrayList<>();
                 list.add("1");
@@ -90,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                     Looper.loop();
                 }
             }
-        }.start();
+        }.start();*/
         if((userName.equals("Admin")) && (userPassword.equals("1234"))){
             //Intent intent = new Intent(MainActivity.this, Main2Activity.class);
             //startActivity(intent);
