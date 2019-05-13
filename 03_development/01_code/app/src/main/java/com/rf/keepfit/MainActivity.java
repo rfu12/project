@@ -70,30 +70,30 @@ public class MainActivity extends AppCompatActivity {
             public void run(){
                 List<String> list = new ArrayList<>();
                 list.add("1");
-                String responseJson = UrlConnectionUtils.sendGetByHttpUrlConnection(SERVICE, LOGINAPI, list, null, "utf-8");
-                if(StringUtil.isEmptyStr(responseJson) || "ERROR!".equals(responseJson)){
-                    Toast.makeText(getApplicationContext(), "An error occurred when asking for service.", Toast.LENGTH_LONG).show();
-                    return;
-                }
                 Looper.prepare();
-                Toast.makeText(getApplicationContext(), responseJson.substring(0, 10), Toast.LENGTH_LONG).show();
-                Looper.loop();
+                try {
+                    String responseJson = UrlConnectionUtils.sendGetByHttpUrlConnection(SERVICE, LOGINAPI, list, null, "utf-8");
+                    if(StringUtil.isEmptyStr(responseJson) || "ERROR!".equals(responseJson)){
+                        Toast.makeText(getApplicationContext(), "An error occurred when asking for service.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    JSONArray jsonArray = new JSONArray(responseJson);
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject obj = jsonArray.getJSONObject(i);
+                        String name = obj.getString("name");
+                        System.out.println(name);
+                        Toast.makeText(getApplicationContext(), name, Toast.LENGTH_LONG).show();
+                    }
+                }catch (JSONException e){
+                    Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                } finally {
+                    Looper.loop();
+                }
             }
         }.start();
-        /*try {
-            JSONArray jsonArray = new JSONArray(responseJson);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject obj = jsonArray.getJSONObject(i);
-                String name = obj.getString("name");
-                System.out.println(name);
-                Toast.makeText(getApplicationContext(), name, Toast.LENGTH_LONG).show();
-            }
-        }catch (JSONException e){
-
-        }*/
         if((userName.equals("Admin")) && (userPassword.equals("1234"))){
-            Intent intent = new Intent(MainActivity.this, Main2Activity.class);
-            startActivity(intent);
+            //Intent intent = new Intent(MainActivity.this, Main2Activity.class);
+            //startActivity(intent);
         }else{
             counter--;
 
