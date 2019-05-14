@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.rf.util.ApiRequestCall;
+import com.rf.util.EncryptionUtil;
 import com.rf.util.StringUtil;
 import com.rf.util.UrlConnectionUtils;
 
@@ -71,7 +72,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         List<String> list = new ArrayList<>();
-        list.add("1");
+        list.add(userName);
+        list.add(EncryptionUtil.string2MD5(userPassword));
         ApiRequestCall call = new ApiRequestCall(SERVICE, LOGINAPI, list, null, "utf-8");
         FutureTask<Map<String, String>> futureTask = new FutureTask(call);
         new Thread(futureTask).start();
@@ -81,12 +83,14 @@ public class MainActivity extends AppCompatActivity {
             if("0".equals(retMap.get("retCode"))) //Toast.makeText(getApplicationContext(), "An error occurred when asking for service.", Toast.LENGTH_LONG).show();
                 Toast.makeText(getApplicationContext(), retJson, Toast.LENGTH_LONG).show();
             else {
+                if(StringUtil.isEmptyStr(retJson)) Toast.makeText(getApplicationContext(), "UserName or password is not correct.", Toast.LENGTH_LONG).show();
                 JSONArray jsonArray = new JSONArray(retJson);
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject obj = jsonArray.getJSONObject(i);
-                    String name = obj.getString("name");
-                    System.out.println(name);
-                    Toast.makeText(getApplicationContext(), name, Toast.LENGTH_LONG).show();
+                    JSONObject userJson = obj.getJSONObject("userId");
+                    String address = userJson.getString("address");
+                    System.out.println(address);
+                    Toast.makeText(getApplicationContext(), address, Toast.LENGTH_LONG).show();
                 }
                 //Toast.makeText(getApplicationContext(), "please write down your login name.", Toast.LENGTH_LONG).show();
             }
