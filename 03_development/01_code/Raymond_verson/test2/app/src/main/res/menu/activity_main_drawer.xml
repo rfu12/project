@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_enter_unit"
+            android:title="Main" />
+        <item
+            android:id="@+id/my_daily_diet"
+            android:title="My Daily Diet" />
+        <item
+            android:id="@+id/nav_display_unit2"
+            android:title="My steps" />
+        <item
+            android:id="@+id/nav_display_unit3"
+            android:title="Calorie Tracker" />
+        <item
+            android:id="@+id/nav_display_unit4"
+            android:title="My Report" />
+    </group>
+</menu>
