@@ -130,7 +130,8 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
     @Path("login/{userName}/{password}")
     @Produces({"application/json"})
     public List<Credential> login(@PathParam("userName") String userName, @PathParam("password") String password) {
-        //List<Users> userList = new ArrayList<>();
+        userName = userName.trim();
+        password = password.trim();
         if(userName == null || "".equals(userName)) return null;
         TypedQuery<Credential> q = em.createQuery("SELECT s FROM Credential s WHERE s.username = :userName and s.passwordHash = :password", Credential.class);
         q.setParameter("userName", userName);
