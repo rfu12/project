@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 public class ApiRequestCall implements Callable<Map<String, String>> {
     //config file
@@ -30,6 +34,12 @@ public class ApiRequestCall implements Callable<Map<String, String>> {
     private Map<String, String> params;
     //请求的字符集
     private String charset;
+    //执行线程
+    private volatile Thread worker;
+
+    private volatile FutureTask<Map<String, String>> futureTask;
+    //线程池
+    private final static Executor EXECUTOR = Executors.newFixedThreadPool(10);
 
     /**
      * 构造方法初始化接口访问
@@ -51,12 +61,12 @@ public class ApiRequestCall implements Callable<Map<String, String>> {
     /**
      * 构造方法初始化接口访问，默认KeepfitApp后台服务器地址，默认utf-8编码
      *
-     * @param apiKey     apiurls.properties文件中配置的拼接接口api
-     * @param apiParams  拼接在url后面的组合成url的参数 如：url/api/1/2
-     * @param params     拼接在url后面的请求参数 如url/api/1/2?name=a&key=b
+     * @param apiKey    apiurls.properties文件中配置的拼接接口api
+     * @param apiParams 拼接在url后面的组合成url的参数 如：url/api/1/2
+     * @param params    拼接在url后面的请求参数 如url/api/1/2?name=a&key=b
      */
     public ApiRequestCall(String apiKey, List<String> apiParams, Map<String, String> params) {
-        this("url.keepfit.service",apiKey,apiParams,params,"utf-8");
+        this("url.keepfit.service", apiKey, apiParams, params, "utf-8");
     }
 
     @Override
@@ -64,11 +74,56 @@ public class ApiRequestCall implements Callable<Map<String, String>> {
         String url = concatUrl(serviceKey, apiKey, apiParams, params);
         Map<String, String> returnMap = new HashMap<>();
         String responseStr = "ERROR!: thread has been interrupted.";
-        if(!Thread.currentThread().isInterrupted()) responseStr = UrlConnectionUtils.sendGetByHttpUrlConnection(url, "utf-8");
-        returnMap.put("retMsg", responseStr);
-        if(responseStr.startsWith("ERROR!: ")) returnMap.put("retCode","0");
-        else returnMap.put("retCode", "1");
+        if (!Thread.currentThread().isInterrupted())
+            responseStr = UrlConnectionUtils.sendGetByHttpUrlConnection(url, charset);
+        returnMap.put("detail", responseStr);
+        if (responseStr.startsWith("ERROR!: ") || StringUtil.isEmptyStr(responseStr))
+            returnMap.put("opcode", "0");
+        else returnMap.put("opcode", "1");
         return returnMap;
+    }
+
+    /**
+     * 获取FutureTask
+     *
+     * @return FutureTask<Map                               <                               String                               ,                                                               String>>
+     */
+    public FutureTask<Map<String, String>> getFutureTask() {
+        if (futureTask == null) {
+            synchronized (ApiRequestCall.class) {
+                if (futureTask == null) futureTask = new FutureTask<>(this);
+            }
+        }
+        return futureTask;
+    }
+
+    /**
+     * 单线程执行
+     *
+     * @return Map<String                               ,                                                               String>：opcode(1-OK,0-Error) and detail
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public Map<String, String> execute() throws ExecutionException, InterruptedException {
+        if (worker == null) {
+            synchronized (this) {
+                worker = new Thread(getFutureTask());
+            }
+        }
+        worker.start();
+        return futureTask.get();
+    }
+
+    /**
+     * 可交给线程池管理和执行任务
+     *
+     * @return Map<String                               ,                                                               String>：opcode(1-OK,0-Error) and detail
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    public Map<String, String> executeInThreadPool() throws ExecutionException, InterruptedException {
+        EXECUTOR.execute(getFutureTask());
+        return futureTask.get();
     }
 
     /**
@@ -82,15 +137,18 @@ public class ApiRequestCall implements Callable<Map<String, String>> {
      * @throws Exception
      */
     public static String concatUrl(String serviceKey, String apiKey, List<String> apiParams, Map<String, String> params) throws Exception {
-        if (serviceKey == null || "".equals(serviceKey))
-            throw new Exception("url cann't be empty.");
+        if (StringUtil.isEmptyStr(serviceKey))
+            throw new IllegalArgumentException("url can't be empty.");
         StringBuilder url = new StringBuilder(p.getProperty(serviceKey));
-        if (apiKey == null || "".equals(apiKey)) return url.toString();
-        String api = p.getProperty(apiKey);
-        url = url.charAt(url.length() - 1) == '/' ? api.charAt(0) == '/' ? url.append(api.substring(1)) : url.append(api) : api.charAt(0) == '/' ? url.append(api) : url.append("/").append(api);
-        if (apiParams == null || apiParams.isEmpty()) return url.toString();
+        if (StringUtil.isEmptyStr(url.toString())) throw new Exception("url is not exist.");
+        if (!StringUtil.isEmptyStr(apiKey)) {
+            String api = p.getProperty(apiKey);
+            if (StringUtil.isEmptyStr(api)) throw new Exception("api is not exist.");
+            url = url.charAt(url.length() - 1) == '/' ? api.charAt(0) == '/' ? url.append(api.substring(1)) : url.append(api) : api.charAt(0) == '/' ? url.append(api) : url.append("/").append(api);
+        }
         if (url.charAt(url.length() - 1) == '/') url.deleteCharAt(url.length() - 1);
-        for (String apiParam : apiParams) url.append("/").append(apiParam);
+        if (apiParams != null && !apiParams.isEmpty())
+            for (String apiParam : apiParams) url.append("/").append(apiParam);
         if (params == null || params.isEmpty()) return url.toString();
         url.append("?");
         for (Map.Entry<String, String> param : params.entrySet())

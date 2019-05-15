@@ -2,6 +2,7 @@ package com.example.test;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,43 +10,85 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.MessageHandler.LoginHandler;
+import com.example.util.ApiRequestCall;
+import com.example.util.EncryptionUtil;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 
 public class LoginActivity extends AppCompatActivity {
     private EditText Name;
-    private  EditText Password;
+    private EditText Password;
     private TextView Info;
     private Button Login;
     private Button Register;
     private int counter = 10;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Name=(EditText) findViewById(R.id.etName);
-        Password=(EditText)findViewById(R.id.etPassword);
-        Login=(Button)findViewById(R.id.btnLogin);
-        Register=(Button)findViewById(R.id.btnRegister);
-        Info=(TextView)findViewById(R.id.tryAmount);
+        final String loginKey = "api.keepfit.login";
+
+        Name = (EditText) findViewById(R.id.etName);
+        Password = (EditText) findViewById(R.id.etPassword);
+        Login = (Button) findViewById(R.id.btnLogin);
+        Register = (Button) findViewById(R.id.btnRegister);
+        Info = (TextView) findViewById(R.id.tryAmount);
         Info.setText("No of attempts left : 10");
 
-        Login.setOnClickListener(new View.OnClickListener(){
+        Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
 
-
-                if (!Name.getText().toString().trim().equals("") && !Password.getText().toString().trim().equals("")) {
+                if (!"".equals(Name.getText().toString().trim()) && !"".equals(Password.getText().toString().trim())) {
+                    LoginHandler handler = new LoginHandler(getApplicationContext());
+                    Message message = Message.obtain();
                     String userNameString = Name.getText().toString().trim();
                     //Send encrypted password to server
                     String encryPW = Password.getText().toString();
+                    List<String> userpwd = new ArrayList<>();
+                    userpwd.add(userNameString);
+                    userpwd.add(EncryptionUtil.string2MD5(encryPW));
+                    try {
+                        ApiRequestCall apiRequestCall = new ApiRequestCall(loginKey, userpwd, null);
+                        Map<String, String> returnMap = apiRequestCall.execute();
+                        message.what = LoginHandler.ERROR;
+                        message.obj = returnMap.get("detail");
+                        if ("1".equals(returnMap.get("opcode"))) {
+                            message.what = LoginHandler.SUCCESS;
+                            JSONArray jsonArray = new JSONArray(returnMap.get("detail"));
+                            for(int i = 0; i<jsonArray.length(); i++)
+                            jsonArray.getJSONObject(i);
+                            Intent intent = new Intent(LoginActivity.this, Dashboard.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            message.what = LoginHandler.NODATA;
+                            counter--;
+                            Info.setText("No of attempts left: " + String.valueOf(counter));
 
-
-
-                    new AsyncTask<String, Void, String>() {
+                            if (counter == 0) {
+                                Login.setEnabled(false);
+                            }
+                        }
+                        handler.sendMessage(message);
+                    } catch (Exception e) {
+                        message.what = LoginHandler.UNKNOWERROR;
+                        handler.sendMessage(message);
+                        e.printStackTrace();
+                    }
+                    /*new AsyncTask<String, Void, String>() {
 
                         @Override
                         protected String doInBackground(String... params) {
@@ -88,7 +131,7 @@ public class LoginActivity extends AppCompatActivity {
                                 finish();
                             }
                         }
-                    }.execute(new String[] {userNameString, encryPW});
+                    }.execute(new String[] {userNameString, encryPW});*/
                 } else {
                     System.out.println("User name/password can not be empty!");
                     counter--;
@@ -102,17 +145,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
 
-
-
     }
-
-
-
-
-
-
-
-
 
 
 }
