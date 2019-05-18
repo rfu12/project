@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="postCode_array">
+        <item>3011</item>
+        <item>3053</item>
+        <item>3121</item>
+        <item>3142</item>
+        <item>3143</item>
+        <item>3144</item>
+        <item>3147</item>
+        <item>3148</item>
+        <item>3152</item>
+        <item>3153</item>
+        <item>3155</item>
+        <item>3156</item>
+        <item>3158</item>
+        <item>3159</item>
+        <item>3160</item>
+        <item>3162</item>
+        <item>3163</item>
+        <item>3166</item>
+        <item>3168</item>
+        <item>3169</item>
+        <item>3170</item>
+        <item>3171</item>
+        <item>3173</item>
+        <item>3175</item>
+        <item>3175</item>
+        <item>3177</item>
+        <item>3178</item>
+        <item>3179</item>
+        <item>3180</item>
+        <item>3181</item>
+        <item>3183</item>
+        <item>3184</item>
+        <item>3185</item>
+        <item>3186</item>
+        <item>3188</item>
+        <item>3189</item>
+        <item>3190</item>
+        <item>3191</item>
+        <item>3192</item>
+        <item>3193</item>
+        <item>3194</item>
+        <item>3195</item>
+        <item>3196</item>
+        <item>3197</item>
+        <item>3198</item>
+        <item>3199</item>
+        <item>3202</item>
+        <item>3204</item>
+    </string-array>
+    <string-array name="loa_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+</resources>

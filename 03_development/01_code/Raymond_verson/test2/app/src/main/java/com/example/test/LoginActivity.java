@@ -11,8 +11,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.MessageHandler.LoginHandler;
+import com.example.entity.Credential;
 import com.example.util.ApiRequestCall;
 import com.example.util.EncryptionUtil;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button Login;
     private Button Register;
     private int counter = 10;
+    private Gson gson = new Gson();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +49,8 @@ public class LoginActivity extends AppCompatActivity {
         Register = (Button) findViewById(R.id.btnRegister);
         Info = (TextView) findViewById(R.id.tryAmount);
         Info.setText("No of attempts left : 10");
+
+        Name.setText(getIntent().getStringExtra("userName"));
 
         Login.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,10 +73,11 @@ public class LoginActivity extends AppCompatActivity {
                         message.obj = returnMap.get("detail");
                         if ("1".equals(returnMap.get("opcode"))) {
                             message.what = LoginHandler.SUCCESS;
-                            JSONArray jsonArray = new JSONArray(returnMap.get("detail"));
-                            for(int i = 0; i<jsonArray.length(); i++)
-                            jsonArray.getJSONObject(i);
+                            JsonArray jsonArray = new JsonArray();
+                            jsonArray.add(returnMap.get("detail"));
+                            Credential credential = gson.fromJson(jsonArray.get(0), Credential.class);
                             Intent intent = new Intent(LoginActivity.this, Dashboard.class);
+                            intent.putExtra("credential", credential);
                             startActivity(intent);
                             finish();
                         } else {
@@ -144,10 +151,16 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        Register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
     }
-
-
 }
 
 
