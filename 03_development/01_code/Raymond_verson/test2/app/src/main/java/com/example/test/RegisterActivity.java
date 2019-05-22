@@ -2,6 +2,7 @@ package com.example.test;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +28,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -398,6 +401,7 @@ public class RegisterActivity extends AppCompatActivity {
                 //Debug
                 System.out.println(validUserName+ "," +validFName+ "," +validLName+ "," +validEmail+ "," +validCPassword
                         + "," + validAddress);
+                btSignup.setEnabled(false);
                 int genderId = rgGender.getCheckedRadioButtonId();
                 if (genderId != -1)
                 {
@@ -410,6 +414,19 @@ public class RegisterActivity extends AppCompatActivity {
 
                     if (validDOB && validPostCode && validStepsPerMile && validGender) {
                         new AsyncTask<Void, Void, String>(){
+
+                            LoadToast lt = new LoadToast(RegisterActivity.this);
+
+                            @Override
+                            protected void onPreExecute() {
+                                lt.setTranslationY(300);
+                                lt.setTextColor(Color.WHITE).setBackgroundColor(Color.rgb(60,179,113)).setProgressColor(Color.WHITE);
+                                // Change the border color
+                                lt.setBorderColor(Color.LTGRAY);
+                                lt.setTextDirection(true);
+                                lt.setText("Waiting Reply...");
+                                lt.show();
+                            }
 
                             @Override
                             protected String doInBackground(Void... params) {
@@ -436,11 +453,14 @@ public class RegisterActivity extends AppCompatActivity {
                                     message.what = LoginHandler.UNKNOWERROR;
                                     message.obj = retStr;
                                     handler.sendMessage(message);
+                                    lt.error();
                                 } else if(StringUtil.isEmptyStr(retStr)){
                                     message.what = -1;
                                     message.obj = "Email Or Username Exist";
                                     handler.sendMessage(message);
+                                    lt.hide();
                                 } else {
+                                    lt.success();
                                     Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                     intent.putExtra("userName", retStr);
                                     startActivity(intent);
@@ -461,8 +481,8 @@ public class RegisterActivity extends AppCompatActivity {
                         tvGender.setText("Gender");
                         tvGender.setTextColor(0xFFFF4081);
                     }
-
                 }
+                btSignup.setEnabled(true);
             }
         });
     }

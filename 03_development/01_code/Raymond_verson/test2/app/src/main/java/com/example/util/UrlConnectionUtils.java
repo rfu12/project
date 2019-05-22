@@ -118,7 +118,6 @@ public abstract class UrlConnectionUtils {
                 osw.flush();
             }
             int contentLength = 0;
-            String a = conn.getHeaderField("Content-Length");
             if(!StringUtil.isEmptyStr(conn.getHeaderField("Content-Length")))
                 contentLength = Integer.parseInt(conn.getHeaderField("Content-Length"));
             if (contentLength > 0) {
