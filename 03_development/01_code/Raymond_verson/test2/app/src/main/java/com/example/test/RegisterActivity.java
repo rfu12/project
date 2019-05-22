@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
 public class RegisterActivity extends AppCompatActivity {
 
     private Gson gson = new Gson();
-    private LoginHandler handler = new LoginHandler(getApplicationContext());
+    private LoginHandler handler = new LoginHandler(this);
     private int resId;
     private int year = 1960, month = 5, date = 5;
     private String datePicked;
@@ -45,6 +46,7 @@ public class RegisterActivity extends AppCompatActivity {
     private String loa;
     private Button bnSetDate;
     private Button btSignup;
+    private Button btBack;
     private Spinner spLevelOfActivity, spPostCode;
     private RadioGroup rgGender;
 
@@ -72,6 +74,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         btSignup = (Button) findViewById(R.id.btSignup);
         bnSetDate = (Button) findViewById(R.id.bnSetDate);
+        btBack = (Button)findViewById(R.id.btBack);
         btSignup.setFocusableInTouchMode(true);
 
         tvUserName = (TextView) findViewById(R.id.tvUserName);
@@ -113,7 +116,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 paramsList.add(params[0]);
                                 String returnStr = null;
                                 try {
-                                    returnStr = UrlConnectionUtils.sendGetByHttpUrlConnection(ApiRequestCall.concatUrl("url.keepfit.service", "api.keepfit.findUser", paramsList, null), "utf-8");
+                                    returnStr = UrlConnectionUtils.sendGetByHttpUrlConnection(ApiRequestCall.concatUrl("url.keepfit.service", "api.keepfit.findUsername", paramsList, null), "utf-8");
                                 } catch (Exception e) {
                                     returnStr = "ERROR!:" + e.getLocalizedMessage();
                                 }
@@ -122,8 +125,8 @@ public class RegisterActivity extends AppCompatActivity {
 
                             @Override
                             protected void onPostExecute(String exist) {
+                                Message message = Message.obtain();
                                 if(exist.startsWith("ERROR!:")) {
-                                    Message message = Message.obtain();
                                     message.what = LoginHandler.UNKNOWERROR;
                                     message.obj = exist;
                                     handler.sendMessage(message);
@@ -132,15 +135,22 @@ public class RegisterActivity extends AppCompatActivity {
                                     tvUserName.setTextColor(0xFF303F9F);
                                     validUserName = true;
                                 } else {
-                                    Users users = gson.fromJson(exist, Users.class);
-                                    if (users != null) {
-                                        tvUserName.setText("User Name-User Name Exist");
-                                        tvUserName.setTextColor(0xFFFF4081);
-                                        validUserName = false;
-                                    } else {
-                                        tvUserName.setText("User Name");
-                                        tvUserName.setTextColor(0xFF303F9F);
-                                        validUserName = true;
+                                    try {
+                                        Credential credential = gson.fromJson(exist, Credential.class);
+                                        if (credential != null) {
+                                            tvUserName.setText("User Name-User Name Exist");
+                                            tvUserName.setTextColor(0xFFFF4081);
+                                            validUserName = false;
+                                        } else {
+                                            tvUserName.setText("User Name");
+                                            tvUserName.setTextColor(0xFF303F9F);
+                                            validUserName = true;
+                                        }
+                                    } catch (JsonSyntaxException e) {
+                                        e.printStackTrace();
+                                        message.what = LoginHandler.ERROR;
+                                        message.obj = exist;
+                                        handler.sendMessage(message);
                                     }
                                 }
                             }
@@ -193,9 +203,54 @@ public class RegisterActivity extends AppCompatActivity {
                             tvEmail.setTextColor(0xFFFF4081);
                             validEmail = false;
                         } else {
-                            tvEmail.setText("Email Address");
-                            tvEmail.setTextColor(0xFF303F9F);
-                            validEmail = true;
+                            new AsyncTask<String, Void, String>() {
+
+                                @Override
+                                protected String doInBackground(String... params) {
+                                    List<String> paramsList = new ArrayList<>();
+                                    paramsList.add(params[0]);
+                                    String returnStr = null;
+                                    try {
+                                        returnStr = UrlConnectionUtils.sendGetByHttpUrlConnection(ApiRequestCall.concatUrl("url.keepfit.service", "api.keepfit.findUserByEmail", paramsList, null), "utf-8");
+                                    } catch (Exception e) {
+                                        returnStr = "ERROR!:" + e.getLocalizedMessage();
+                                    }
+                                    return returnStr;
+                                }
+
+                                @Override
+                                protected void onPostExecute(String exist) {
+                                    Message message = Message.obtain();
+                                    if(exist.startsWith("ERROR!:")) {
+                                        message.what = LoginHandler.UNKNOWERROR;
+                                        message.obj = exist;
+                                        handler.sendMessage(message);
+                                    } else if(StringUtil.isEmptyStr(exist)){
+                                        tvEmail.setText("Email Address");
+                                        tvEmail.setTextColor(0xFF303F9F);
+                                        validEmail = true;
+                                    } else {
+                                        try {
+                                            JsonParser jsonParser = new JsonParser();
+                                            JsonArray userArray = jsonParser.parse(exist).getAsJsonArray();
+                                            if(userArray.size() != 0) {
+                                                tvEmail.setText("Email Address-Email Address Exist");
+                                                tvEmail.setTextColor(0xFFFF4081);
+                                                validEmail = false;
+                                            } else {
+                                                tvEmail.setText("Email Address");
+                                                tvEmail.setTextColor(0xFF303F9F);
+                                                validEmail = true;
+                                            }
+                                        } catch (JsonSyntaxException e) {
+                                            e.printStackTrace();
+                                            message.what = LoginHandler.ERROR;
+                                            message.obj = exist;
+                                            handler.sendMessage(message);
+                                        }
+                                    }
+                                }
+                            }.execute(edEmail.getText().toString());
                         }
                     } else {
                         tvEmail.setText("Email Address-Required");
@@ -207,7 +262,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         edHeight.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            final String pattern = "^[0-2]+[0-9]{2}$";
+            final String pattern = "(^[1-2]{1}[0-9]{2}$)|(^[1-9]{1}[0-9]{1}$)";
 
             @Override
             public void onFocusChange(View view, boolean b) {
@@ -217,16 +272,16 @@ public class RegisterActivity extends AppCompatActivity {
                         Pattern r = Pattern.compile(pattern);
                         Matcher m = r.matcher(height);
                         if (!m.find()) {
-                            tvHeight.setText("Height format is incorrect");
+                            tvHeight.setText("Height(CM) format is incorrect");
                             tvHeight.setTextColor(0xFFFF4081);
                             validHeight = false;
                         } else {
-                            tvHeight.setText("Height");
+                            tvHeight.setText("Height(CM)");
                             tvHeight.setTextColor(0xFF303F9F);
                             validHeight = true;
                         }
                     } else {
-                        tvHeight.setText("Height-Required");
+                        tvHeight.setText("Height(CM)-Required");
                         tvHeight.setTextColor(0xFFFF4081);
                         validHeight = false;
                     }
@@ -235,7 +290,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         edWeight.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            final String pattern = "^[0-9]{3}$";
+            final String pattern = "^[1-9]{1}[0-9]{1,2}$";
 
             @Override
             public void onFocusChange(View view, boolean b) {
@@ -245,16 +300,16 @@ public class RegisterActivity extends AppCompatActivity {
                         Pattern r = Pattern.compile(pattern);
                         Matcher m = r.matcher(weight);
                         if (!m.find()) {
-                            tvWeight.setText("Weight format is incorrect");
+                            tvWeight.setText("Weight(KG) format is incorrect");
                             tvWeight.setTextColor(0xFFFF4081);
                             validWeight = false;
                         } else {
-                            tvWeight.setText("Weight");
+                            tvWeight.setText("Weight(KG)");
                             tvWeight.setTextColor(0xFF303F9F);
                             validWeight = true;
                         }
                     } else {
-                        tvWeight.setText("Weight-Required");
+                        tvWeight.setText("Weight(KG)-Required");
                         tvWeight.setTextColor(0xFFFF4081);
                         validWeight = false;
                     }
@@ -263,7 +318,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         edStepsPerMile.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            final String pattern = "^[0-9]{4}$";
+            final String pattern = "^[1-9]{1}[0-9]{2,3}$";
 
             @Override
             public void onFocusChange(View view, boolean b) {
@@ -319,9 +374,16 @@ public class RegisterActivity extends AppCompatActivity {
         hasFocus(password,tvPassword,"validPassowrd");
         hasFocus(edFName,tvFName,"validFName");
         hasFocus(edLName,tvLName,"validLName");
-        hasFocus(edAddress,tvAddress,"validStreet");
+        hasFocus(edAddress,tvAddress,"validAddress");
 
-
+        btBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         bnSetDate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -353,15 +415,16 @@ public class RegisterActivity extends AppCompatActivity {
                             protected String doInBackground(Void... params) {
                                 String retStr = null;
                                 try {
-                                    Users users = new Users(null,edLName.getText().toString(),edFName.getText().toString(),edEmail.getText().toString(), new Date(datePicked),Integer.parseInt(edHeight.getText().toString()),Integer.parseInt(edWeight.getText().toString()),gender,edAddress.getText().toString(),Integer.parseInt(pCode),Integer.parseInt(loa),Integer.parseInt(tvStepsPerMile.getText().toString()));
+                                    Users users = new Users(null,edFName.getText().toString(),edLName.getText().toString(),edEmail.getText().toString(), datePicked,Integer.parseInt(edHeight.getText().toString()),Integer.parseInt(edWeight.getText().toString()),gender,edAddress.getText().toString(),Integer.parseInt(pCode),Integer.parseInt(loa),Integer.parseInt(edStepsPerMile.getText().toString()));
                                     Credential credential = new Credential(userName.getText().toString(),confirmPassword.getText().toString(),null,null);
                                     JsonObject paramJson = new JsonObject();
                                     JsonParser jsonParser = new JsonParser();
                                     paramJson.add("users", jsonParser.parse(gson.toJson(users)));
                                     paramJson.add("credential", jsonParser.parse(gson.toJson(credential)));
-                                    System.out.println(paramJson.getAsString());
-                                    retStr = UrlConnectionUtils.sendPostByHttpUrlConnect(ApiRequestCall.concatUrl("url.keepfit.service", "api.keepfit.register", null, null), paramJson.getAsString(), "utf-8");
+                                    System.out.println(paramJson.toString());
+                                    retStr = UrlConnectionUtils.sendPostByHttpUrlConnect(ApiRequestCall.concatUrl("url.keepfit.service", "api.keepfit.register", null, null), paramJson.toString(), "utf-8");
                                 } catch (Exception e) {
+                                    e.printStackTrace();
                                     retStr = "ERROR!:" + e.getLocalizedMessage();
                                 }
                                 return retStr;
@@ -372,15 +435,17 @@ public class RegisterActivity extends AppCompatActivity {
                                 if(retStr.startsWith("ERROR!:")) {
                                     message.what = LoginHandler.UNKNOWERROR;
                                     message.obj = retStr;
+                                    handler.sendMessage(message);
                                 } else if(StringUtil.isEmptyStr(retStr)){
-                                    message.what = LoginHandler.NODATA;
+                                    message.what = -1;
+                                    message.obj = "Email Or Username Exist";
+                                    handler.sendMessage(message);
                                 } else {
                                     Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                     intent.putExtra("userName", retStr);
                                     startActivity(intent);
                                     finish();
                                 }
-                                handler.sendMessage(message);
                             }
                         }.execute();
                     } else if (!validDOB) {

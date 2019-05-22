@@ -71,7 +71,7 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
 
     @GET
     @Path("{id}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
     public Credential find(@PathParam("id") String id) {
         return super.find(id);
     }
@@ -143,7 +143,7 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
     @GET
     @Path("login/{userName}/{password}")
     @Produces({"application/json"})
-    public List<Credential> login(@PathParam("userName") String userName, @PathParam("password") String password) {
+    public Credential login(@PathParam("userName") String userName, @PathParam("password") String password) {
         userName = userName.trim();
         password = password.trim();
         if (userName == null || "".equals(userName)) {
@@ -153,12 +153,8 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
         q.setParameter("userName", userName);
         q.setParameter("password", password);
         List<Credential> credList = q.getResultList();
-        if (credList != null && credList.size() == 1) {
-            credList.get(0).setPasswordHash(null);
-            return credList;
-        } else {
-            return null;
-        }
+        if (credList != null && credList.size() == 1) return credList.get(0);
+        else return null;
     }
 
     @POST
@@ -167,6 +163,8 @@ public class CredentialFacadeREST extends AbstractFacade<Credential> {
     public String register(RegisterFormModel registerFormModel) {
         Credential checkExist = find(registerFormModel.getCredential().getUsername());
         if (checkExist != null) return null;
+        List<Users> checkEmail = usersFacadeREST.findByEmail(registerFormModel.getUsers().getEmail());
+        if(checkEmail != null && !checkEmail.isEmpty()) return null;
         if (registerFormModel.getUsers().getUserId() == null) 
             registerFormModel.getUsers().setUserId(usersFacadeREST.count() + 1);
         usersFacadeREST.create(registerFormModel.getUsers());

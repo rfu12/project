@@ -251,7 +251,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Height"
+                    android:text="Height(CM)"
                     android:textColor="@color/colorPrimaryDark"
                     android:textSize="18sp"/>
 
@@ -260,7 +260,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Weight"
+                    android:text="Weight(KG)"
                     android:textColor="@color/colorPrimaryDark"
                     android:textSize="18sp"/>
 
@@ -277,7 +277,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:inputType="textPersonName" />
+                    android:inputType="number" />
 
                 <EditText
                     android:id="@+id/edWeight"
@@ -285,7 +285,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:inputType="textPersonName" />
+                    android:inputType="number" />
             </LinearLayout>
 
             <LinearLayout
@@ -333,11 +333,27 @@
                     android:inputType="number" />
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btSignup"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Sign Up" />
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/btSignup"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sign Up" />
+
+                <Button
+                    android:id="@+id/btBack"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Back" />
+            </LinearLayout>
+
         </LinearLayout>
 
     </ScrollView>

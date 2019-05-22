@@ -15,11 +15,6 @@ import com.example.entity.Credential;
 import com.example.util.ApiRequestCall;
 import com.example.util.EncryptionUtil;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,9 +68,7 @@ public class LoginActivity extends AppCompatActivity {
                         message.obj = returnMap.get("detail");
                         if ("1".equals(returnMap.get("opcode"))) {
                             message.what = LoginHandler.SUCCESS;
-                            JsonArray jsonArray = new JsonArray();
-                            jsonArray.add(returnMap.get("detail"));
-                            Credential credential = gson.fromJson(jsonArray.get(0), Credential.class);
+                            Credential credential = gson.fromJson(returnMap.get("detail"), Credential.class);
                             Intent intent = new Intent(LoginActivity.this, Dashboard.class);
                             intent.putExtra("credential", credential);
                             startActivity(intent);

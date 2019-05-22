@@ -28,6 +28,8 @@ public class LoginHandler extends BaseHandler {
             case UNKNOWERROR:
                 showText("Service System Error.");
                 break;
+            default:
+                showText(msg.obj.toString());
         }
     }
 }

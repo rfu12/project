@@ -21,7 +21,7 @@ public class Users implements Serializable {
     private String surname;
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
     private String email;
-    private Date dob;
+    private String dob;
     private Integer height;
     private Integer weight;
     private String gender;
@@ -36,7 +36,7 @@ public class Users implements Serializable {
     public Users() {
     }
 
-    public Users(Integer userId, String name, String surname, String email, Date dob, Integer height, Integer weight, String gender, String address, Integer postcode, Integer levelOfActivity, Integer stepsPerMile) {
+    public Users(Integer userId, String name, String surname, String email, String dob, Integer height, Integer weight, String gender, String address, Integer postcode, Integer levelOfActivity, Integer stepsPerMile) {
         this.userId = userId;
         this.name = name;
         this.surname = surname;
@@ -87,11 +87,9 @@ public class Users implements Serializable {
         this.email = email;
     }
 
-    public Date getDob() {
-        return dob;
-    }
+    public String getDob() { return dob; }
 
-    public void setDob(Date dob) {
+    public void setDob(String dob) {
         this.dob = dob;
     }
 

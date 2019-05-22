@@ -104,7 +104,7 @@ public abstract class UrlConnectionUtils {
         HttpURLConnection conn = null;
         try {
             URL url = new URL(api);
-            conn = (HttpURLConnection) url.getContent();
+            conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoInput(true);
             conn.setDoOutput(true);
@@ -118,7 +118,8 @@ public abstract class UrlConnectionUtils {
                 osw.flush();
             }
             int contentLength = 0;
-            if(StringUtil.isEmptyStr(conn.getHeaderField("Content-Length")))
+            String a = conn.getHeaderField("Content-Length");
+            if(!StringUtil.isEmptyStr(conn.getHeaderField("Content-Length")))
                 contentLength = Integer.parseInt(conn.getHeaderField("Content-Length"));
             if (contentLength > 0) {
                 String temp = null;
@@ -127,7 +128,7 @@ public abstract class UrlConnectionUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            sb.delete(0, sb.length() - 1);
+            sb.delete(0, sb.length());
             sb.append("ERROR!: ").append(e.getLocalizedMessage());
         } finally {
             if(osw != null) {
